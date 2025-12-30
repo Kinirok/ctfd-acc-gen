@@ -1,20 +1,22 @@
 package gen
 
 import (
+	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 )
 
-func generatePassword() string {
-	n := 10
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
+func GeneratePassword() string {
+	const n = 10
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	password := make([]byte, n)
-
-	for i := range password {
-		password[i] = charset[seededRand.Intn(len(charset))]
+	var password strings.Builder
+	password.Grow(n)
+	for range n {
+		fmt.Fprintf(&password, "%c", charset[seededRand.Intn(len(charset))])
 	}
 
-	return string(password)
+	return password.String()
 }
