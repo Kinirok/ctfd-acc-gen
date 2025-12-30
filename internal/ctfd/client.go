@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -78,7 +79,19 @@ func (c *Client) CreateTeam(ctx context.Context, req CreateTeamRequest) (CreateT
 }
 
 func (c *Client) AddUserToTeam(ctx context.Context, teamID, userID int) error {
+	var response ExistenceResponse
 
+	req := AddToTeamRequest{UserID: userID}
+	url := fmt.Sprintf("%s/teams/%d/members", c.baseURL, teamID)
+
+	err := c.makeRequest(ctx, "POST", url, req, &response)
+	if err != nil {
+		return err
+	}
+
+	if !response.Success {
+		return err
+	}
 	return nil
 }
 
@@ -120,14 +133,16 @@ func (c *Client) makeRequest(ctx context.Context, method, url string, requestDat
 	if requestData != nil {
 		jsonData, err := json.Marshal(requestData)
 		if err != nil {
-			return fmt.Errorf("failed to marshal request data: %w", err)
+			log.Printf("failed to marshal request data")
+			return err
 		}
 		body = bytes.NewBuffer(jsonData)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
+		log.Println("error occurred while making request")
+		return err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -135,15 +150,25 @@ func (c *Client) makeRequest(ctx context.Context, method, url string, requestDat
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to send request: %w", err)
+		log.Println("failed to send request")
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode >= 500 {
+		log.Println("re-attempting request")
+		for i := range 5 {
+			resp, err := c.client.Do(req)
+			if err != nil {
+				return fmt.Errorf("attempt %d failed", i)
+			}
+			defer resp.Body.Close()
+			time.Sleep(time.Second * 1)
+		}
+	}
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %w", err)
 	}
-
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 
 		var errorResp struct {

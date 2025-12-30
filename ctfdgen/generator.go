@@ -31,7 +31,10 @@ func (g *Generator) CreateIndividualAccounts(ctx context.Context, emails []strin
 
 		user := gormodel.Account{ID: resp.Data.ID, Email: resp.Data.Email, CTFDUser: resp.Data.CTFDUser, CTFDPass: resp.Data.CTFDPass, TeamName: teamName, TeamID: *teamID}
 		if hasTeam {
-			g.ctfdClient.AddUserToTeam(ctx, *teamID, int(resp.Data.ID))
+			err = g.ctfdClient.AddUserToTeam(ctx, *teamID, int(resp.Data.ID))
+			if err != nil {
+				g.logger.Printf("failed to add user %d to team %d: %s", resp.Data.ID, *teamID, err.Error())
+			}
 		}
 		err = gormodel.AddUserToDB(g.db, user)
 		if err != nil {

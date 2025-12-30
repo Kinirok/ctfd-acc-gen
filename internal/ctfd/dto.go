@@ -31,10 +31,8 @@ type CreateTeamResponse struct {
 	StatusCode int `json:"status_code"`
 }
 
-type TeamResponse struct {
-	Success bool                 `json:"success"`
-	Team    string               `json:"team"`
-	Members []CreateUserResponse `json:"members"`
+type AddToTeamRequest struct {
+	UserID int `json:"user_id"`
 }
 
 type ExistenceResponse struct {
