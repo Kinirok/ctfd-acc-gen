@@ -24,7 +24,7 @@ docker compose run --rm lib create_teams teamCount teamSize  -  создание
 docker compose run --rm lib check_user username1 username2 ...  -  проверка на существование в PostgreDB и CTFd пользователя  
 docker compose run --rm lib check_team team_name1 team_name2 ...  -  проверка на существование в PostgreDB и CTFd команды  
 
-**Если не удается создать объект, то выполнение прекрашается**
+**Если не удается создать объект, то выполнение прекращается**
 ## Пример использования
 ```go
   _ = godotenv.Load()
