@@ -7,7 +7,7 @@ import (
 )
 
 var checkUserCmd = &cobra.Command{
-	Use:   "check_user username1 username2",
+	Use:   "check_user",
 	Short: "Проверяет наличие пользователей в базе данных Postgre",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {

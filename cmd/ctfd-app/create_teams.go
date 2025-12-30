@@ -8,7 +8,7 @@ import (
 )
 
 var createTeamsCmd = &cobra.Command{
-	Use:   "create_teams <teamsCount> <teamsSize",
+	Use:   "create_teams",
 	Short: "Создать команды",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 2 {

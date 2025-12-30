@@ -12,7 +12,7 @@ type Account struct {
 	CTFDUser  string `gorm:"not null"`
 	CTFDPass  string `gorm:"not null"`
 	TeamName  *string
-	TeamID    int
+	TeamID    *int
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`

@@ -19,10 +19,10 @@
 ## Команды
 docker compose up db  
 docker compose build lib  
-docker compose run --rm lib ctfd create_users n  -  создание n пользователей  
-docker compose run --rm lib ctfd create_teams teamCount teamSize  -  создание teamCount команд c teamSize пользователями  
-docker compose run --rm lib ctfd check_user username1 username2 ...  -  проверка на существование в PostgreDB и CTFd пользователя  
-docker compose run --rm lib ctfd check_team team_name1 team_name2 ...  -  проверка на существование в PostgreDB и CTFd команды  
+docker compose run --rm lib create_users n  -  создание n пользователей  
+docker compose run --rm lib create_teams teamCount teamSize  -  создание teamCount команд c teamSize пользователями  
+docker compose run --rm lib check_user username1 username2 ...  -  проверка на существование в PostgreDB и CTFd пользователя  
+docker compose run --rm lib check_team team_name1 team_name2 ...  -  проверка на существование в PostgreDB и CTFd команды  
 
 **Если не удается создать объект, то выполнение прекрашается**
 ## Пример использования

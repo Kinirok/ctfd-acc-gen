@@ -12,11 +12,13 @@ import (
 func (g *Generator) CreateIndividualAccounts(ctx context.Context, emails []string, hasTeam bool, teamName *string, teamID *int) error {
 	g.logger.Printf("Making %d accounts", len(emails))
 	for _, email := range emails {
-		resp, err := g.ctfdClient.CreateUser(ctx, ctfd.CreateUserRequest{Email: email, Name: gen.GenerateLogin(), Password: gen.GeneratePassword()})
+		name := gen.GenerateLogin()
+		resp, err := g.ctfdClient.CreateUser(ctx, ctfd.CreateUserRequest{Email: email, Name: name, Password: gen.GeneratePassword()})
 		if err != nil {
 			if resp.StatusCode == 400 {
 				for range 5 {
-					resp, err = g.ctfdClient.CreateUser(ctx, ctfd.CreateUserRequest{Email: email, Name: gen.GenerateLogin(), Password: gen.GeneratePassword()})
+					name = gen.GenerateLogin()
+					resp, err = g.ctfdClient.CreateUser(ctx, ctfd.CreateUserRequest{Email: email, Name: name, Password: gen.GeneratePassword()})
 					if err == nil {
 						break
 					}
@@ -28,8 +30,9 @@ func (g *Generator) CreateIndividualAccounts(ctx context.Context, emails []strin
 				return err
 			}
 		}
+		g.logger.Printf("Account %s succesfully created", name)
 
-		user := gormodel.Account{ID: resp.Data.ID, Email: resp.Data.Email, CTFDUser: resp.Data.CTFDUser, CTFDPass: resp.Data.CTFDPass, TeamName: teamName, TeamID: *teamID}
+		user := gormodel.Account{ID: resp.Data.ID, Email: resp.Data.Email, CTFDUser: resp.Data.CTFDUser, CTFDPass: resp.Data.CTFDPass, TeamName: teamName, TeamID: teamID}
 		if hasTeam {
 			err = g.ctfdClient.AddUserToTeam(ctx, *teamID, int(resp.Data.ID))
 			if err != nil {
@@ -66,6 +69,7 @@ func (g *Generator) CreateTeamAccounts(ctx context.Context, teamsCount, teamSize
 				return err
 			}
 		}
+		g.logger.Printf("Team %s succesfully created", teamName)
 		g.logger.Println("Adding new team to DB")
 		err = gormodel.AddTeamToDB(g.db, gormodel.Team{ID: res.Data.ID, TeamName: res.Data.Name})
 		if err != nil {

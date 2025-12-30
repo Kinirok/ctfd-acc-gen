@@ -36,6 +36,6 @@ func main() {
 		return
 	}
 	ctx = context.Background()
-
+	//fmt.Print(generator.GenerateNEmails(1))
 	Execute()
 }
