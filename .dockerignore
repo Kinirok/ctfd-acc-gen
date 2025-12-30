@@ -29,6 +29,6 @@
 **/secrets.dev.yaml
 **/values.dev.yaml
 **/createTeamresp.json
-# **/*_test.go
+**/*_test.go
 LICENSE
 README.md
