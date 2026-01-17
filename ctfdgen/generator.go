@@ -30,7 +30,7 @@ func (g *Generator) CreateIndividualAccounts(ctx context.Context, emails []strin
 				return err
 			}
 		}
-		g.logger.Printf("Account %s succesfully created", name)
+		g.logger.Printf("Account %s with email %s succesfully created", name, email)
 
 		user := gormodel.Account{ID: resp.Data.ID, Email: resp.Data.Email, CTFDUser: resp.Data.CTFDUser, CTFDPass: resp.Data.CTFDPass, TeamName: teamName, TeamID: teamID}
 		if hasTeam {

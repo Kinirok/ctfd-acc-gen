@@ -47,7 +47,7 @@ func NewCTFdClient(baseURL, adminToken string) CTFdClient {
 func (c *Client) CreateUser(ctx context.Context, req CreateUserRequest) (CreateUserResponse, error) {
 	var response CreateUserResponse
 
-	url := fmt.Sprintf("%s/users", c.baseURL)
+	url := fmt.Sprintf("%s/api/v1/users", c.baseURL)
 
 	err := c.makeRequest(ctx, "POST", url, req, &response)
 	if err != nil {
@@ -64,7 +64,7 @@ func (c *Client) CreateUser(ctx context.Context, req CreateUserRequest) (CreateU
 func (c *Client) CreateTeam(ctx context.Context, req CreateTeamRequest) (CreateTeamResponse, error) {
 	var response CreateTeamResponse
 
-	url := fmt.Sprintf("%s/teams", c.baseURL)
+	url := fmt.Sprintf("%s/api/v1/teams", c.baseURL)
 
 	err := c.makeRequest(ctx, "POST", url, req, &response)
 	if err != nil {
@@ -82,7 +82,7 @@ func (c *Client) AddUserToTeam(ctx context.Context, teamID, userID int) error {
 	var response ExistenceResponse
 
 	req := AddToTeamRequest{UserID: userID}
-	url := fmt.Sprintf("%s/teams/%d/members", c.baseURL, teamID)
+	url := fmt.Sprintf("%s/api/v1/teams/%d/members", c.baseURL, teamID)
 
 	err := c.makeRequest(ctx, "POST", url, req, &response)
 	if err != nil {
@@ -97,11 +97,11 @@ func (c *Client) AddUserToTeam(ctx context.Context, teamID, userID int) error {
 
 func (c *Client) UserExists(ctx context.Context, user_id uint) (bool, error) {
 	var response ExistenceResponse
-	url := fmt.Sprintf("%s/users/%d", c.baseURL, user_id)
+	url := fmt.Sprintf("%s/api/v1/users/%d", c.baseURL, user_id)
 
 	err := c.makeRequest(ctx, "GET", url, nil, &response)
 	if err != nil {
-		return response.Success, fmt.Errorf("failed to create team: %w", err)
+		return response.Success, fmt.Errorf("failed to check user: %w", err)
 	}
 
 	if !response.Success {
@@ -113,7 +113,7 @@ func (c *Client) UserExists(ctx context.Context, user_id uint) (bool, error) {
 
 func (c *Client) TeamExists(ctx context.Context, team_id uint) (bool, error) {
 	var response ExistenceResponse
-	url := fmt.Sprintf("%s/teams/%d", c.baseURL, team_id)
+	url := fmt.Sprintf("%s/api/v1/teams/%d", c.baseURL, team_id)
 
 	err := c.makeRequest(ctx, "GET", url, nil, &response)
 	if err != nil {

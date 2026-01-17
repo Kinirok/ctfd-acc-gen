@@ -15,7 +15,7 @@ var checkUserCmd = &cobra.Command{
 			return
 		}
 		for _, username := range args {
-			b, err := generator.CheckTeam(ctx, username)
+			b, err := generator.CheckUser(ctx, username)
 			if err != nil {
 				log.Printf("%s: %s", username, err.Error())
 

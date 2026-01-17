@@ -14,6 +14,9 @@ func (g *Generator) CheckUser(ctx context.Context, username string) (bool, error
 	if err != nil {
 		return false, err
 	}
+	if id == 0 {
+		return false, nil
+	}
 	return g.ctfdClient.UserExists(ctx, id)
 }
 
@@ -24,6 +27,9 @@ func (g *Generator) CheckTeam(ctx context.Context, teamname string) (bool, error
 		Pluck("id", &id).Error
 	if err != nil {
 		return false, err
+	}
+	if id == 0 {
+		return false, nil
 	}
 	return g.ctfdClient.TeamExists(ctx, id)
 }
