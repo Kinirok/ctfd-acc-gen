@@ -20,6 +20,7 @@ type CreateUserResponse struct {
 
 type CreateTeamRequest struct {
 	TeamName string `json:"name"`
+	Password string `json:"password"`
 }
 
 type CreateTeamResponse struct {

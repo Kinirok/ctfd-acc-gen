@@ -52,7 +52,7 @@ func (g *Generator) CreateTeamAccounts(ctx context.Context, teamsCount, teamSize
 	for range teamsCount {
 		g.logger.Println("Making request to CTFd API")
 		teamName := gen.GenerateTeamName()
-		res, err := g.ctfdClient.CreateTeam(ctx, ctfd.CreateTeamRequest{TeamName: teamName})
+		res, err := g.ctfdClient.CreateTeam(ctx, ctfd.CreateTeamRequest{TeamName: teamName, Password: gen.GeneratePassword()})
 		if err != nil {
 			if res.StatusCode == 400 {
 				for range 5 {
