@@ -8,7 +8,6 @@ import (
 
 	"github.com/Kinirok/ctfd-acc-gen/ctfdgen"
 	"github.com/Kinirok/ctfd-acc-gen/internal/ctfd"
-	"github.com/Kinirok/ctfd-acc-gen/internal/gen"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -18,17 +17,6 @@ var generator *ctfdgen.Generator
 var ctx context.Context
 
 func main() {
-	pass1 := gen.GeneratePassword()
-	fmt.Printf(pass1)
-	for range 1000 {
-		pass2 := gen.GeneratePassword()
-		if pass2 == pass1 {
-			fmt.Printf("%s: %s", pass2, pass1)
-		}
-		pass1 = pass2
-	}
-}
-func main1() {
 
 	_ = godotenv.Load()
 
@@ -49,5 +37,5 @@ func main1() {
 	}
 	ctx = context.Background()
 
-	//Execute()
+	Execute()
 }
