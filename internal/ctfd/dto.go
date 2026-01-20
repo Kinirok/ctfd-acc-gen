@@ -37,5 +37,6 @@ type AddToTeamRequest struct {
 }
 
 type ExistenceResponse struct {
-	Success bool `json:"success"`
+	Success    bool `json:"success"`
+	StatusCode int  `json:"status_code"`
 }

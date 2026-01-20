@@ -49,7 +49,7 @@ func (c *Client) CreateUser(ctx context.Context, req CreateUserRequest) (CreateU
 
 	url := fmt.Sprintf("%s/api/v1/users", c.baseURL)
 
-	err := c.makeRequest(ctx, "POST", url, req, &response)
+	err, respCode := c.makeRequest(ctx, "POST", url, req, &response)
 	if err != nil {
 		return response, fmt.Errorf("failed to create user: %w", err)
 	}
@@ -58,6 +58,7 @@ func (c *Client) CreateUser(ctx context.Context, req CreateUserRequest) (CreateU
 		return response, fmt.Errorf("CTFd API returned failure for user creation")
 	}
 	response.Data.CTFDPass = req.Password
+	response.StatusCode = *respCode
 	return response, nil
 }
 
@@ -66,15 +67,15 @@ func (c *Client) CreateTeam(ctx context.Context, req CreateTeamRequest) (CreateT
 
 	url := fmt.Sprintf("%s/api/v1/teams", c.baseURL)
 
-	err := c.makeRequest(ctx, "POST", url, req, &response)
+	err, respCode := c.makeRequest(ctx, "POST", url, req, &response)
 	if err != nil {
 		return response, err
 	}
 
 	if !response.Success {
-		return response, err
+		return response, fmt.Errorf("CTFd API returned failure for team creation")
 	}
-
+	response.StatusCode = *respCode
 	return response, nil
 }
 
@@ -84,14 +85,15 @@ func (c *Client) AddUserToTeam(ctx context.Context, teamID, userID int) error {
 	req := AddToTeamRequest{UserID: userID}
 	url := fmt.Sprintf("%s/api/v1/teams/%d/members", c.baseURL, teamID)
 
-	err := c.makeRequest(ctx, "POST", url, req, &response)
+	err, respCode := c.makeRequest(ctx, "POST", url, req, &response)
 	if err != nil {
 		return err
 	}
 
 	if !response.Success {
-		return err
+		return fmt.Errorf("CTFd API returned failure for adding user to team")
 	}
+	response.StatusCode = *respCode
 	return nil
 }
 
@@ -99,15 +101,11 @@ func (c *Client) UserExists(ctx context.Context, user_id uint) (bool, error) {
 	var response ExistenceResponse
 	url := fmt.Sprintf("%s/api/v1/users/%d", c.baseURL, user_id)
 
-	err := c.makeRequest(ctx, "GET", url, nil, &response)
+	err, respCode := c.makeRequest(ctx, "GET", url, nil, &response)
 	if err != nil {
 		return response.Success, fmt.Errorf("failed to check user: %w", err)
 	}
-
-	if !response.Success {
-		return response.Success, fmt.Errorf("CTFd API returned failure for team creation")
-	}
-
+	response.StatusCode = *respCode
 	return response.Success, nil
 }
 
@@ -115,26 +113,32 @@ func (c *Client) TeamExists(ctx context.Context, team_id uint) (bool, error) {
 	var response ExistenceResponse
 	url := fmt.Sprintf("%s/api/v1/teams/%d", c.baseURL, team_id)
 
-	err := c.makeRequest(ctx, "GET", url, nil, &response)
+	err, respCode := c.makeRequest(ctx, "GET", url, nil, &response)
 	if err != nil {
 		return response.Success, fmt.Errorf("failed to create team: %w", err)
 	}
-
-	if !response.Success {
-		return response.Success, fmt.Errorf("CTFd API returned failure for team creation")
-	}
-
+	response.StatusCode = *respCode
 	return response.Success, nil
 }
-
-func (c *Client) makeRequest(ctx context.Context, method, url string, requestData interface{}, responseData interface{}) error {
+func (c *Client) retryRequest(req *http.Request) (*http.Response, error) {
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode >= 500 {
+		resp.Body.Close()
+		return nil, fmt.Errorf("status code %d", resp.StatusCode)
+	}
+	return resp, err
+}
+func (c *Client) makeRequest(ctx context.Context, method, url string, requestData interface{}, responseData interface{}) (error, *int) {
 	var body io.Reader
 
 	if requestData != nil {
 		jsonData, err := json.Marshal(requestData)
 		if err != nil {
 			log.Printf("failed to marshal request data")
-			return err
+			return err, nil
 		}
 		body = bytes.NewBuffer(jsonData)
 	}
@@ -142,7 +146,7 @@ func (c *Client) makeRequest(ctx context.Context, method, url string, requestDat
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		log.Println("error occurred while making request")
-		return err
+		return err, nil
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -151,23 +155,28 @@ func (c *Client) makeRequest(ctx context.Context, method, url string, requestDat
 	resp, err := c.client.Do(req)
 	if err != nil {
 		log.Println("failed to send request")
+		return err, nil
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode >= 500 {
 		log.Println("re-attempting request")
+		resp.Body.Close() //закрываем соединение
 		for i := range 5 {
-			resp, err := c.client.Do(req)
+			resp, err = c.retryRequest(req) //заносим новый респонс в переменную
 			if err != nil {
-				return fmt.Errorf("attempt %d failed", i)
+				log.Printf("attempt %d failed: %s", i, err.Error()) // если запрос не удался, внутри функции тело закрыто, запускается следующий цикл
+			} else {
+				break // если ошибка nil, то ответ есть, выходим из цикла и вызываем defer
 			}
-			defer resp.Body.Close()
 			time.Sleep(time.Second * 1)
 		}
 	}
+
+	defer resp.Body.Close()
+
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("failed to read response body: %w", err)
+		return fmt.Errorf("failed to read response body: %w", err), nil
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 
@@ -177,15 +186,14 @@ func (c *Client) makeRequest(ctx context.Context, method, url string, requestDat
 		}
 
 		if err := json.Unmarshal(respBody, &errorResp); err == nil && errorResp.Message != "" {
-			return fmt.Errorf("CTFd API error (%d): %s", resp.StatusCode, errorResp.Message)
+			return fmt.Errorf("CTFd API error (%d): %s", resp.StatusCode, errorResp.Message), &resp.StatusCode
 		}
 
-		return fmt.Errorf("CTFd API returned status %d: %s", resp.StatusCode, string(respBody))
+		return fmt.Errorf("CTFd API returned status %d: %s", resp.StatusCode, string(respBody)), &resp.StatusCode
 	}
 
 	if err := json.Unmarshal(respBody, responseData); err != nil {
-		return fmt.Errorf("failed to unmarshal response: %w. Response: %s", err, string(respBody))
+		return fmt.Errorf("failed to unmarshal response: %w. Response: %s", err, string(respBody)), nil
 	}
-
-	return nil
+	return nil, &resp.StatusCode
 }

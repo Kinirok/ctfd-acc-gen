@@ -3,6 +3,7 @@ package ctfdgen
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Kinirok/ctfd-acc-gen/internal/ctfd"
 	"github.com/Kinirok/ctfd-acc-gen/internal/gen"
@@ -19,7 +20,7 @@ func (g *Generator) CreateIndividualAccounts(ctx context.Context, emails []strin
 				for range 5 {
 					name = gen.GenerateLogin()
 					resp, err = g.ctfdClient.CreateUser(ctx, ctfd.CreateUserRequest{Email: email, Name: name, Password: gen.GeneratePassword()})
-					if err == nil {
+					if err == nil && resp.StatusCode == 200 && resp.Success {
 						break
 					}
 				}
@@ -32,7 +33,7 @@ func (g *Generator) CreateIndividualAccounts(ctx context.Context, emails []strin
 		}
 		g.logger.Printf("Account %s with email %s succesfully created", name, email)
 
-		user := gormodel.Account{ID: resp.Data.ID, Email: resp.Data.Email, CTFDUser: resp.Data.CTFDUser, CTFDPass: resp.Data.CTFDPass, TeamName: teamName, TeamID: teamID}
+		user := gormodel.Account{ID: resp.Data.ID, Email: strings.ToLower(resp.Data.Email), CTFDUser: resp.Data.CTFDUser, CTFDPass: resp.Data.CTFDPass, TeamName: teamName, TeamID: teamID}
 		if hasTeam {
 			err = g.ctfdClient.AddUserToTeam(ctx, *teamID, int(resp.Data.ID))
 			if err != nil {
@@ -58,7 +59,7 @@ func (g *Generator) CreateTeamAccounts(ctx context.Context, teamsCount, teamSize
 				for range 5 {
 					teamName = gen.GenerateTeamName()
 					res, err = g.ctfdClient.CreateTeam(ctx, ctfd.CreateTeamRequest{TeamName: teamName})
-					if err == nil {
+					if err == nil && res.StatusCode == 200 && res.Success {
 						break
 					}
 				}

@@ -21,7 +21,7 @@ services:
       db:
         condition: service_healthy
 
-  db:
+  postgres-db:
     image: postgres:17
     env_file:
       - .env
