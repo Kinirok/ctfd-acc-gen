@@ -14,7 +14,7 @@ func (g *Generator) CreateIndividualAccounts(ctx context.Context, emails []strin
 	g.logger.Printf("Making %d accounts", len(emails))
 	for _, email := range emails {
 		name := gen.GenerateLogin()
-		resp, err := g.ctfdClient.CreateUser(ctx, ctfd.CreateUserRequest{Email: email, Name: name, Password: gen.GeneratePassword()})
+		resp, err := g.ctfdClient.CreateUser(ctx, ctfd.CreateUserRequest{Email: strings.ToLower(email), Name: name, Password: gen.GeneratePassword()})
 		if err != nil {
 			if resp.StatusCode == 400 {
 				for range 5 {
@@ -33,7 +33,7 @@ func (g *Generator) CreateIndividualAccounts(ctx context.Context, emails []strin
 		}
 		g.logger.Printf("Account %s with email %s succesfully created", name, email)
 
-		user := gormodel.Account{ID: resp.Data.ID, Email: strings.ToLower(resp.Data.Email), CTFDUser: resp.Data.CTFDUser, CTFDPass: resp.Data.CTFDPass, TeamName: teamName, TeamID: teamID}
+		user := gormodel.Account{ID: resp.Data.ID, Email: resp.Data.Email, CTFDUser: resp.Data.CTFDUser, CTFDPass: resp.Data.CTFDPass, TeamName: teamName, TeamID: teamID}
 		if hasTeam {
 			err = g.ctfdClient.AddUserToTeam(ctx, *teamID, int(resp.Data.ID))
 			if err != nil {
