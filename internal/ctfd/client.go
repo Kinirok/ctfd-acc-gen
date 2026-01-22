@@ -124,7 +124,6 @@ func (c *Client) TeamExists(ctx context.Context, team_id uint) (bool, error) {
 func (c *Client) retryRequest(req *http.Request) (*http.Response, error) {
 	resp, err := c.client.Do(req)
 	if err != nil {
-		resp.Body.Close()
 		return nil, err
 	}
 	if resp.StatusCode >= 500 {
