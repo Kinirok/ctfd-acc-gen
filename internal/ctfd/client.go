@@ -164,10 +164,10 @@ func (c *Client) makeRequest(ctx context.Context, method, url string, requestDat
 		log.Println("re-attempting request")
 		resp.Body.Close()
 		for i := range 5 {
+			time.Sleep(time.Second * 1)
 			if jsonData != nil {
 				body = bytes.NewBuffer(jsonData)
 			}
-
 			req, err := http.NewRequestWithContext(ctx, method, url, body)
 			if err != nil {
 				log.Printf("attempt %d failed: %s", i, err.Error())
@@ -182,7 +182,6 @@ func (c *Client) makeRequest(ctx context.Context, method, url string, requestDat
 			} else {
 				break
 			}
-			time.Sleep(time.Second * 1)
 		}
 	}
 
