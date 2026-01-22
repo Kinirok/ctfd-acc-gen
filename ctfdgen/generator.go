@@ -58,7 +58,7 @@ func (g *Generator) CreateTeamAccounts(ctx context.Context, teamsCount, teamSize
 			if res.StatusCode == 400 {
 				for range 5 {
 					teamName = gen.GenerateTeamName()
-					res, err = g.ctfdClient.CreateTeam(ctx, ctfd.CreateTeamRequest{TeamName: teamName})
+					res, err = g.ctfdClient.CreateTeam(ctx, ctfd.CreateTeamRequest{TeamName: teamName, Password: gen.GeneratePassword()})
 					if err == nil && res.StatusCode == 200 && res.Success {
 						break
 					}
